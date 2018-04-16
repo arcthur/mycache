@@ -1,0 +1,13 @@
+# directories
+lib
+test
+examples
+scripts
+.vscode
+.coverage
+
+# files
+.gitignore
+.prettierrc
+.travis.yml
+yarn.lock

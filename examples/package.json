@@ -1,0 +1,17 @@
+{
+  "name": "mycache-example",
+  "version": "0.1.0",
+  "license": "MIT",
+  "main": "src/index.js",
+  "scripts": {
+    "build": "webpack"
+  },
+  "dependencies": {
+    "mycache": "file:.."
+  },
+  "devDependencies": {
+    "babel-loader": "^7.1.4",
+    "webpack": "^3.8.1"
+  },
+  "private": true
+}

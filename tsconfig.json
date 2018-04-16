@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "./lib",
+    "allowJs": true,
+    "sourceMap": true,
+    "target": "es5",
+    "lib": ["es2017", "dom"],
+    "moduleResolution": "node",
+    "strict": true,
+    "strictNullChecks": false
+  },
+  "files": [
+    "src/index.ts"
+  ]
+}
