@@ -4,7 +4,7 @@ import fs from 'fs';
 import puppeteer from 'puppeteer';
 
 test.beforeEach(async t => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
 
   const preloadCacheFile = fs.readFileSync(__dirname + '/../dist/umd/mycache.prod.min.js', 'utf8');
