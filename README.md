@@ -28,8 +28,8 @@ import { Cache, Persist } from 'mycache';
 const persist = new Persist();
 
 async function persist() {
-  await persist.setItem('key', 'value');
-  return await persist.getItem('key');
+  await persist.set('key', 'value');
+  return await persist.get('key');
 }
 ```
 
@@ -53,7 +53,6 @@ import { Persist } from 'mycache';
 const persist = new Persist({
   name: 'mycache', // name prefix of key
   valueMaxLength: 500 * 1000, // max length of value
-  autoClearExpires: true, // auto clear expires and max length on beforeonload
   storeName: 'persist'; // The name of the datastore
 });
 ```
