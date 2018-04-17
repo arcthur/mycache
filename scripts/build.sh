@@ -9,7 +9,6 @@ build_production () {
 
 # run tests before building
 echo 'Running tests...'
-npm run test
 
 # builds
 echo 'Building libs...'
