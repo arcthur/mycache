@@ -20,83 +20,94 @@ test.afterEach(t => {
 test('cache set get item', async t => {
   const cache = t.context.cache;
 
-  const setARes = await cache.setItem('a', { a: 1 });
-  const setBRes = await cache.setItem('b', { b: 1 });
+  await cache.set('a', { a: 1 });
+  await cache.set('b', { b: 1 });
 
-  t.deepEqual(await cache.getItem('a'), { a: 1 });
-  t.deepEqual(await cache.getItem('b'), { b: 1 });
+  t.deepEqual(await cache.get('a'), { a: 1 });
+  t.deepEqual(await cache.get('b'), { b: 1 });
   t.is(await cache.length(), 2);
+});
+
+test.serial('cache gets items', async t => {
+  const cache = t.context.cache;
+
+  await cache.set('a', { a: 1 });
+  await cache.set('b', { b: 1 });
+  await cache.set('c', { c: 1 });
+
+  t.deepEqual(await cache.gets(['a', 'b', 'c']), [{ a: 1 }, { b: 1 }, { c: 1 }]);
 });
 
 test('cache append item', async t => {
   const cache = t.context.cache;
 
-  const setRes = await cache.setItem('a', { a: 1 });
-  const appendRes = await cache.appendItem('a', { b: 1 });
+  const setRes = await cache.set('a', { a: 1 });
+  const appendRes = await cache.append('a', { b: 1 });
 
-  t.deepEqual(await cache.getItem('a'), { 'a': 1, 'b': 1 });
+  t.deepEqual(await cache.get('a'), { 'a': 1, 'b': 1 });
   t.is(await cache.length(), 1);
 });
 
 test('cache remove item', async t => {
   const cache = t.context.cache;
 
-  const setRes = await cache.setItem('a', { a: 1 });
-  t.deepEqual(await cache.getItem('a'), { a: 1 });
+  const setRes = await cache.set('a', { a: 1 });
+  t.deepEqual(await cache.get('a'), { a: 1 });
 
-  const removeRes = await cache.removeItem('a');
-  t.deepEqual(await cache.getItem('a'), null);
+  const removeRes = await cache.remove('a');
+  t.deepEqual(await cache.get('a'), null);
 });
 
 test('cache clear item', async t => {
   const cache = t.context.cache;
 
-  const setRes = await cache.setItem('a', { a: 1 });
-  const setOtherRes = await cache.setItem('b', { b: 1 });
+  const setRes = await cache.set('a', { a: 1 });
+  const setOtherRes = await cache.set('b', { b: 1 });
   const clearRes = await cache.clear();
 
   t.is(await cache.length(), 0);
 });
 
-test('cache iterate', async t => {
+test.serial('cache each', async t => {
   const cache = t.context.cache;
 
-  await cache.setItem('a', { a: 1 });
-  await cache.setItem('b', { b: 1 });
+  await cache.set('a', { a: 1 });
+  await cache.set('b', { b: 1 });
 
-  const res = await cache.iterate((val, key) => {});
+  let len = 0;
+  await cache.each((val, key) => { len++; });
 
-  t.deepEqual(res, { b: 1 });
+  t.is(len, 2);
 });
 
 test.serial('cache expire item use number', async t => {
   const cache = t.context.cache;
   const clock = t.context.clock;
   
-  await cache.setItem('a', { a: 1 }, 1000);
+  await cache.set('a', { a: 1 }, 1000);
   clock.tick(1000001);
 
-  t.is(await cache.getItem('a'), null);
+  t.is(await cache.get('a'), null);
 });
 
 test.serial('cache expire item use Date', async t => {
   const cache = t.context.cache;
   const clock = t.context.clock;
 
-  await cache.setItem('b', { b: 1 }, new Date('January 2, 2013'));
+  await cache.set('b', { b: 1 }, new Date('January 2, 2013'));
   clock.tick(86400001);
 
-  t.is(await cache.getItem('b'), null);
+  t.is(await cache.get('b'), null);
 });
 
 test.serial('cache clear expire', async t => {
   const cache = t.context.cache;
   const clock = t.context.clock;
 
-  await cache.setItem('a', { a: 1 }, 1000);
-  await cache.setItem('b', { b: 1 }, new Date('January 2, 2013'));
+  await cache.set('a', { a: 1 }, 1000);
+  await cache.set('b', { b: 1 }, new Date('January 2, 2013'));
   clock.tick(1000001);
-  await cache.clearExpires();
+  await cache.autoClear();
 
   t.is(await cache.length(), 1);
 });

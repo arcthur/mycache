@@ -27,12 +27,12 @@ test.serial('persist set get item', async t => {
 
   const result = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    const setARes = await persist.setItem('a', { a: 1 });
-    const setBRes = await persist.setItem('b', { b: 1 });
+    const setARes = await persist.set('a', { a: 1 });
+    const setBRes = await persist.set('b', { b: 1 });
 
     return {
-      aVal: await persist.getItem('a'),
-      bVal: await persist.getItem('b'),
+      aVal: await persist.get('a'),
+      bVal: await persist.get('b'),
       length: await persist.length(),
     };
   });
@@ -42,16 +42,55 @@ test.serial('persist set get item', async t => {
   t.is(result.length, 2);
 });
 
+test.serial('persist set get item using compress', async t => {
+  const page = t.context.page;
+
+  const result = await page.evaluate(async () => {
+    const persist = new window.Mycache.Persist({
+      isCompress: true,
+    });
+    const setARes = await persist.set('a', { a: 1 });
+    const setBRes = await persist.set('b', { b: 1 });
+
+    return {
+      aVal: await persist.get('a'),
+      bVal: await persist.get('b'),
+      length: await persist.length(),
+    };
+  });
+
+  t.deepEqual(result.aVal, { a: 1 });
+  t.deepEqual(result.bVal, { b: 1 });
+  t.is(result.length, 2);
+});
+
+test.serial('persist gets items', async t => {
+  const page = t.context.page;
+
+  const result = await page.evaluate(async () => {
+    const persist = new window.Mycache.Persist();
+    await persist.set('a', { a: 1 });
+    await persist.set('b', { b: 1 });
+    await persist.set('c', { c: 1 });
+
+    return {
+      val: await persist.gets(['a', 'b', 'c']),
+    };
+  });
+
+  t.deepEqual(result.val, [{ a: 1 }, { b: 1 }, { c: 1 }]);
+});
+
 test.serial('persist append item', async t => {
   const page = t.context.page;
 
   const result = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    const setRes = await persist.setItem('a', { a: 1 });
-    const appendRes = await persist.appendItem('a', { b: 1 });
+    const setRes = await persist.set('a', { a: 1 });
+    const appendRes = await persist.append('a', { b: 1 });
 
     return {
-      aVal: await persist.getItem('a'),
+      aVal: await persist.get('a'),
       length: await persist.length(),
     };
   });
@@ -65,10 +104,10 @@ test.serial('persist remove item', async t => {
 
   const result1 = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    const setRes = await persist.setItem('a', { a: 1 });
+    const setRes = await persist.set('a', { a: 1 });
 
     return {
-      aVal: await persist.getItem('a'),
+      aVal: await persist.get('a'),
     };
   });
 
@@ -76,10 +115,10 @@ test.serial('persist remove item', async t => {
 
   const result2 = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    const setRes = await persist.removeItem('a');
+    const setRes = await persist.remove('a');
 
     return {
-      aVal: await persist.getItem('a'),
+      aVal: await persist.get('a'),
     };
   });
 
@@ -91,8 +130,8 @@ test.serial('persist clear item', async t => {
 
   const result = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    await persist.setItem('a', { a: 1 });
-    await persist.setItem('b', { b: 1 });
+    await persist.set('a', { a: 1 });
+    await persist.set('b', { b: 1 });
     await persist.clear()
 
     return {
@@ -103,16 +142,16 @@ test.serial('persist clear item', async t => {
   t.is(result.length, 0);
 });
 
-test.serial('persist iterate', async t => {
+test.serial('persist each', async t => {
   const page = t.context.page;
 
   const result = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    await persist.setItem('a', { a: 1 });
-    await persist.setItem('b', { b: 1 });
+    await persist.set('a', { a: 1 });
+    await persist.set('b', { b: 1 });
 
     let length = 0;
-    await persist.iterate((val, key) => {
+    await persist.each((val, key) => {
       length++;
     });
 
@@ -130,11 +169,11 @@ test.serial('persist expire item use number', async t => {
   const result = await page.evaluate(async () => {
     const MockDate = window.MockDate.set('1/2/2013');
     const persist = new window.Mycache.Persist();
-    await persist.setItem('a', { a: 1 }, 1000);
+    await persist.set('a', { a: 1 }, 1000);
     window.MockDate.set('1/3/2013');
 
     return {
-      aVal: await persist.getItem('a'),
+      aVal: await persist.get('a'),
     };
   });
 
@@ -147,11 +186,11 @@ test.serial('persist expire item use Date', async t => {
   const result = await page.evaluate(async () => {
     const MockDate = window.MockDate.set('1/1/2013');
     const persist = new window.Mycache.Persist();
-    await persist.setItem('b', { b: 1 }, new Date('January 2, 2013'));
+    await persist.set('b', { b: 1 }, new Date('January 2, 2013'));
     window.MockDate.set('1/3/2013');
 
     return {
-      aVal: await persist.getItem('a'),
+      aVal: await persist.get('a'),
     };
   });
 
@@ -164,10 +203,10 @@ test.serial('persist clear expire', async t => {
   const result = await page.evaluate(async () => {
     const MockDate = window.MockDate.set('1/1/2013');
     const persist = new window.Mycache.Persist();
-    await persist.setItem('a', { a: 1 }, 1000);
-    await persist.setItem('b', { b: 1 }, new Date('January 3, 2013'));
+    await persist.set('a', { a: 1 }, 1000);
+    await persist.set('b', { b: 1 }, new Date('January 3, 2013'));
     window.MockDate.set('1/2/2013');
-    await persist.clearExpires();
+    await persist.autoClear();
 
     return {
       length: await persist.length(),

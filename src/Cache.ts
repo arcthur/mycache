@@ -4,7 +4,7 @@ interface Config {
   name?: string;
 }
 
-interface Data {
+interface DataValue {
   expire: number | null;
   value: any;
 }
@@ -18,7 +18,7 @@ class Cache {
     this.cacheInstance = {};
   }
 
-  async clearExpires(): Promise<boolean> {
+  async autoClear(): Promise<boolean> {
     const keys = Object.keys(this.cacheInstance);
 
     keys.forEach(async (res, num) => {
@@ -27,14 +27,14 @@ class Cache {
 
       const isExpired = await this.isExpired(value);
       if (isExpired) {
-        this.removeItem(key);
+        this.remove(key);
       }
     });
 
     return Promise.resolve(true);
   }
 
-  isExpired(value: Data): Promise<boolean> {
+  isExpired(value: DataValue): Promise<boolean> {
     if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
       return Promise.resolve(true);
     } else {
@@ -46,7 +46,7 @@ class Cache {
     return this.cacheConfig.name + '/' + key;
   }
 
-  async getItem(key: string): Promise<any> {
+  async get(key: string): Promise<any> {
     key = this.getKey(key);
     const res = this.cacheInstance[key];
     const isExpired = await this.isExpired(res);
@@ -54,14 +54,22 @@ class Cache {
     if (!res || !res.value) {
       return Promise.resolve(null);
     } else if (isExpired) {
-      this.removeItem(key);
+      this.remove(key);
       return Promise.resolve(null);
     } else if (res.value) {
       return Promise.resolve(res.value);
     }
   }
+  
+  async gets(keys: string[]): Promise<any> {
+    let res = [];
+    for (let i = 0; i < keys.length; i++) {
+      res.push(await this.get(keys[i]));
+    }
+    return Promise.resolve(res);
+  }
 
-  setItem<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
+  set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     key = this.getKey(key);
     if (utils.isDate(expire)) {
       expire = (expire as Date).getTime();
@@ -74,10 +82,10 @@ class Cache {
     return Promise.resolve(value);
   }
 
-  appendItem<T>(key: string, value: T, expire = -1): Promise<T> {
+  append<T>(key: string, value: T, expire = -1): Promise<T> {
     const res = this.cacheInstance[this.getKey(key)];
 
-    if (!res) { return this.setItem(key, value, expire); }
+    if (!res) { return this.set(key, value, expire); }
 
     if (utils.isArray(value) && utils.isArray(res.value)) {
       value = res.value.concat(value);
@@ -86,10 +94,20 @@ class Cache {
     }
  
     expire = expire ? expire : res.expire;
-    return this.setItem(key, value, expire);
+    return this.set(key, value, expire);
   }
 
-  removeItem(key: string): Promise<void> {
+  has(key: string): Promise<boolean> {
+    const value = this.get(key);
+
+    if (value) {
+      return Promise.resolve(true);
+    } else {
+      return Promise.resolve(false);
+    }
+  }
+
+  remove(key: string): Promise<void> {
     key = this.getKey(key);
     if (this.cacheInstance[key]) {
       this.cacheInstance[key] = null;
@@ -97,6 +115,10 @@ class Cache {
     }
 
     return Promise.resolve();
+  }
+
+  keys(): Promise<string[]> {
+    return Promise.resolve(Object.keys(this.cacheInstance));
   }
 
   clear(): Promise<void> {
@@ -114,21 +136,17 @@ class Cache {
     }
   }
 
-  async iterate<T, U>(iterator: (value: T, key: string, iterationNumber: number) => U, 
-    cb: (err: any, result: U) => void = null): Promise<U> {
+  async each<T>(iterator: (value: T, key: string, iterationNumber: number) => void): Promise<boolean> {
     const keys = Object.keys(this.cacheInstance);
 
-    const lastRes: U = keys.length > 0 ? this.cacheInstance[keys[keys.length - 1]]['value'] : null;
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i].replace(this.cacheConfig.name + '/', '');
+      const val = await this.get(key);
 
-    keys.forEach(async (res, num) => {
-      res = res.replace(this.cacheConfig.name + '/', '');
-      const val = await this.getItem(res);
-      iterator(val, res, num);
-    });
+      if (iterator) { iterator(val, key, i); }
+    }
 
-    if (cb) { cb(null, lastRes); }
-
-    return Promise.resolve(lastRes);
+    return Promise.resolve(true);
   }
 }
 
