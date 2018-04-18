@@ -29,10 +29,9 @@
   },
   "scripts": {
     "build": "cross-env rimraf build dist && tsc && rollup -c && node ./scripts/bundles",
-    "build:all": "bash ./scripts/build.sh",
     "dev": "tsc --watch src",
-    "lint": "eslint ./src",
-    "test": "nyc ava",
+    "lint": "tslint src/*",
+    "test": "npm run build & nyc ava",
     "report": "nyc report --reporter=html"
   },
   "dependencies": {
