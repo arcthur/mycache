@@ -12,7 +12,7 @@ const isArray = Array.isArray;
 
 function isObject(val: any) {
   return val != null && typeof val === 'object' && Array.isArray(val) === false;
-};
+}
 
 function isObjectObject(o: any) {
   return isObject(o) === true
@@ -20,17 +20,15 @@ function isObjectObject(o: any) {
 }
 
 function isPlainObject(o: any) {
-  var ctor,prot;
-
-  if (isObjectObject(o) === false) return false;
+  if (isObjectObject(o) === false) { return false; }
 
   // If has modified constructor
-  ctor = o.constructor;
-  if (typeof ctor !== 'function') return false;
+  const ctor = o.constructor;
+  if (typeof ctor !== 'function') { return false; }
 
   // If has modified prototype
-  prot = ctor.prototype;
-  if (isObjectObject(prot) === false) return false;
+  const prot = ctor.prototype;
+  if (isObjectObject(prot) === false) { return false; }
 
   // If constructor does not have an Object-specific method
   if (prot.hasOwnProperty('isPrototypeOf') === false) {
@@ -42,10 +40,10 @@ function isPlainObject(o: any) {
 }
 
 function extend(target: any, source: any) {
-  if (source === null || typeof source !== 'object') return target;
+  if (source === null || typeof source !== 'object') { return target; }
 
-  var keys = Object.keys(source);
-  var i = keys.length;
+  const keys = Object.keys(source);
+  let i = keys.length;
   while (i--) {
     target[keys[i]] = source[keys[i]];
   }
@@ -54,21 +52,20 @@ function extend(target: any, source: any) {
 }
 
 function omit(obj: any, props: any) {
-  if (!isObject(obj)) return {};
+  if (!isObject(obj)) { return {}; }
 
   if (typeof props === 'string') { props = [props]; }
 
-  let keys = Object.keys(obj);
-  let res: any = {};
+  const keys = Object.keys(obj);
+  const res: any = {};
 
-  for (let i = 0; i < keys.length; i++) {
-    const key = keys[i];
-
+  for (const key of keys) {
     if (!props || (props.indexOf(key) === -1)) {
       res[key] = obj[key];
     }
   }
+
   return res;
-};
+}
 
 export { isDate, isNumber, isArray, isPlainObject, extend, omit };

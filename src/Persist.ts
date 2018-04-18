@@ -1,8 +1,8 @@
 import * as localforage from 'localforage';
-import * as utils from './utils';
 import LZString from './LZString';
+import * as utils from './utils';
 
-interface Config {
+interface IConfig {
   driver?: string | string[];
   valueMaxLength?: number;
   name?: string;
@@ -10,44 +10,41 @@ interface Config {
   isCompress?: boolean;
 }
 
-interface DataMap {
+interface IDataMap {
   key: string;
-  value: DataValue;
+  value: IDataValue;
 }
 
-interface DataValue {
+interface IDataValue {
   expire: number | null;
   now: number | null;
   value: any;
 }
 
-const DEFAULT_CONFIG: Config = {
+const DEFAULT_CONFIG: IConfig = {
   driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
-  valueMaxLength: 1000 * 500,
   isCompress: false,
+  valueMaxLength: 500 * 1024,
 };
 
 class Persist {
-  private cacheConfig: Config;
+  private cacheConfig: IConfig;
   private cacheInstance: any;
 
-  constructor(config: Config = {}) {
+  constructor(config: IConfig = {}) {
     this.cacheConfig = utils.extend(config, DEFAULT_CONFIG);
     this.cacheInstance = localforage.createInstance(this.cacheConfig);
   }
 
-  autoClear(): Promise<boolean> {
-    return this.cacheInstance.iterate((value: DataValue, key: string) => {
-      Promise.all([this.isExpired(value), this.isOverLength(value)])
-      .then((res: boolean[]) => {
-        if (res[0] || res[1]) {
-          this.remove(key);
-        }
+  public clearExpired(): Promise<boolean> {
+    return this.cacheInstance.iterate((value: IDataValue, key: string) => {
+      this.isExpired(value).then((res: boolean) => {
+        if (res) { this.remove(key); }
       });
     });
   }
 
-  isExpired(value: DataValue): Promise<boolean> {
+  public isExpired(value: IDataValue): Promise<boolean> {
     if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
       return Promise.resolve(true);
     } else {
@@ -55,7 +52,7 @@ class Persist {
     }
   }
 
-  async isOverLength(value: DataValue): Promise<boolean> {
+  public async isOverLength(value: IDataValue): Promise<boolean> {
     const valueMaxLength = this.cacheConfig.valueMaxLength;
     const serialize = await this.cacheInstance.getSerializer();
 
@@ -67,11 +64,11 @@ class Persist {
     });
   }
 
-  dropInstance(config: Config = {}): Promise<void> {
+  public dropInstance(config: IConfig = {}): Promise<void> {
     return this.cacheInstance.dropInstance(config);
   }
 
-  async get(key: string): Promise<any> {
+  public async get(key: string): Promise<any> {
     try {
       const res = await this.getItem(key);
       const isExpired = await this.isExpired(res);
@@ -95,15 +92,17 @@ class Persist {
     }
   }
 
-  async gets(keys: string[]): Promise<any> {
-    let res = [];
-    for (let i = 0; i < keys.length; i++) {
-      res.push(await this.get(keys[i]));
+  public async gets(keys: string[]): Promise<any> {
+    const res = [];
+
+    for (const key of keys) {
+      res.push(await this.get(key));
     }
+
     return Promise.resolve(res);
   }
 
-  async set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
+  public async set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     try {
       const serialize = await this.cacheInstance.getSerializer();
       const now = new Date().getTime();
@@ -115,13 +114,13 @@ class Persist {
         expire = now + (expire as number) * 1000;
       }
 
-      const setRes = await this.setItem(key, { 
+      const setRes = await this.setItem(key, {
         value: this.cacheConfig.isCompress ? LZString.compress(JSON.stringify(value)) : value,
         expire,
         now,
       });
 
-      let setVal = this.cacheConfig.isCompress ?
+      const setVal = this.cacheConfig.isCompress ?
         JSON.parse(LZString.decompress(setRes.value as string)) : setRes.value;
 
       return Promise.resolve(setVal);
@@ -130,7 +129,7 @@ class Persist {
     }
   }
 
-  async append<T>(key: string, value: T, expire = -1): Promise<T> {
+  public async append<T>(key: string, value: T, expire = -1): Promise<T> {
     let res;
 
     try {
@@ -151,7 +150,7 @@ class Persist {
     return this.set(key, value, expire);
   }
 
-  async has(key: string): Promise<boolean> {
+  public async has(key: string): Promise<boolean> {
     const value = await this.get(key);
 
     if (value) {
@@ -161,30 +160,30 @@ class Persist {
     }
   }
 
-  remove(key: string): Promise<void> {
+  public remove(key: string): Promise<void> {
     return this.cacheInstance.removeItem(key);
   }
 
-  keys(): Promise<string[]> {
+  public keys(): Promise<string[]> {
     return this.cacheInstance.keys();
   }
 
-  clear(): Promise<void> {
+  public clear(): Promise<void> {
     return this.cacheInstance.clear();
   }
 
-  length(): Promise<number> {
+  public length(): Promise<number> {
     return this.cacheInstance.length();
   }
 
-  async each<T>(iterator: (value: T, key: string, num: number) => void): Promise<boolean> {
+  public async each<T>(iterator: (value: T, key: string, num: number) => void): Promise<boolean> {
     try {
-      const cache: DataMap[] = [];
-      await this.cacheInstance.iterate((value: DataValue, key: string, num: number) => {
+      const cache: IDataMap[] = [];
+      await this.cacheInstance.iterate((value: IDataValue, key: string, num: number) => {
         cache.push({ key, value });
       });
 
-      const LRUMap = cache.sort((a: DataMap, b: DataMap) => (a.value.now - a.value.now));
+      const LRUMap = cache.sort((a: IDataMap, b: IDataMap) => (a.value.now - a.value.now));
 
       for (let i = 0; i < LRUMap.length; i++) {
         if (iterator) {
@@ -207,4 +206,4 @@ class Persist {
   }
 }
 
-export default Persist; 
+export default Persist;

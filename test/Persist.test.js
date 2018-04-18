@@ -206,7 +206,7 @@ test.serial('persist clear expire', async t => {
     await persist.set('a', { a: 1 }, 1000);
     await persist.set('b', { b: 1 }, new Date('January 3, 2013'));
     window.MockDate.set('1/2/2013');
-    await persist.autoClear();
+    await persist.clearExpired();
 
     return {
       length: await persist.length(),

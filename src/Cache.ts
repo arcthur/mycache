@@ -1,40 +1,38 @@
 import * as utils from './utils';
 
-interface Config {
+interface IConfig {
   name?: string;
 }
 
-interface DataValue {
+interface IDataValue {
   expire: number | null;
   value: any;
 }
 
 class Cache {
-  private cacheConfig: Config;
+  private cacheConfig: IConfig;
   private cacheInstance: any;
 
-  constructor(config: Config = {}) {
+  constructor(config: IConfig = {}) {
     this.cacheConfig = utils.extend(config, { name: 'memcache' });
     this.cacheInstance = {};
   }
 
-  async autoClear(): Promise<boolean> {
+  public async clearExpired(): Promise<boolean> {
     const keys = Object.keys(this.cacheInstance);
 
-    keys.forEach(async (res, num) => {
-      const value = this.cacheInstance[res];
-      const key = res.replace(this.cacheConfig.name + '/', '');
+    for (const key of keys) {
+      const value = this.cacheInstance[key];
+      const realKey = key.replace(this.cacheConfig.name + '/', '');
 
       const isExpired = await this.isExpired(value);
-      if (isExpired) {
-        this.remove(key);
-      }
-    });
+      if (isExpired) { this.remove(realKey); }
+    }
 
     return Promise.resolve(true);
   }
 
-  isExpired(value: DataValue): Promise<boolean> {
+  public isExpired(value: IDataValue): Promise<boolean> {
     if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
       return Promise.resolve(true);
     } else {
@@ -42,11 +40,11 @@ class Cache {
     }
   }
 
-  getKey(key: string): string {
+  public getKey(key: string): string {
     return this.cacheConfig.name + '/' + key;
   }
 
-  async get(key: string): Promise<any> {
+  public async get(key: string): Promise<any> {
     key = this.getKey(key);
     const res = this.cacheInstance[key];
     const isExpired = await this.isExpired(res);
@@ -60,16 +58,17 @@ class Cache {
       return Promise.resolve(res.value);
     }
   }
-  
-  async gets(keys: string[]): Promise<any> {
-    let res = [];
-    for (let i = 0; i < keys.length; i++) {
-      res.push(await this.get(keys[i]));
+
+  public async gets(keys: string[]): Promise<any> {
+    const res = [];
+
+    for (const key of keys) {
+      res.push(await this.get(key));
     }
     return Promise.resolve(res);
   }
 
-  set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
+  public set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     key = this.getKey(key);
     if (utils.isDate(expire)) {
       expire = (expire as Date).getTime();
@@ -82,7 +81,7 @@ class Cache {
     return Promise.resolve(value);
   }
 
-  append<T>(key: string, value: T, expire = -1): Promise<T> {
+  public append<T>(key: string, value: T, expire = -1): Promise<T> {
     const res = this.cacheInstance[this.getKey(key)];
 
     if (!res) { return this.set(key, value, expire); }
@@ -92,12 +91,12 @@ class Cache {
     } else if (utils.isPlainObject(value) && utils.isPlainObject(res.value)) {
       value = utils.extend(res.value, value);
     }
- 
+
     expire = expire ? expire : res.expire;
     return this.set(key, value, expire);
   }
 
-  has(key: string): Promise<boolean> {
+  public has(key: string): Promise<boolean> {
     const value = this.get(key);
 
     if (value) {
@@ -107,7 +106,7 @@ class Cache {
     }
   }
 
-  remove(key: string): Promise<void> {
+  public remove(key: string): Promise<void> {
     key = this.getKey(key);
     if (this.cacheInstance[key]) {
       this.cacheInstance[key] = null;
@@ -117,16 +116,16 @@ class Cache {
     return Promise.resolve();
   }
 
-  keys(): Promise<string[]> {
+  public keys(): Promise<string[]> {
     return Promise.resolve(Object.keys(this.cacheInstance));
   }
 
-  clear(): Promise<void> {
+  public clear(): Promise<void> {
     this.cacheInstance = {};
     return Promise.resolve();
   }
 
-  length(): Promise<number> {
+  public length(): Promise<number> {
     const keys = Object.keys(this.cacheInstance);
 
     if (keys.length) {
@@ -136,7 +135,7 @@ class Cache {
     }
   }
 
-  async each<T>(iterator: (value: T, key: string, iterationNumber: number) => void): Promise<boolean> {
+  public async each<T>(iterator: (value: T, key: string, iterationNumber: number) => void): Promise<boolean> {
     const keys = Object.keys(this.cacheInstance);
 
     for (let i = 0; i < keys.length; i++) {
