@@ -2,7 +2,7 @@ import * as localforage from 'localforage';
 import LZString from './LZString';
 import * as utils from './utils';
 
-interface IConfig {
+export interface IConfig {
   driver?: string | string[];
   valueMaxLength?: number;
   name?: string;
@@ -10,12 +10,12 @@ interface IConfig {
   isCompress?: boolean;
 }
 
-interface IDataMap {
+export interface IDataMap {
   key: string;
   value: IDataValue;
 }
 
-interface IDataValue {
+export interface IDataValue {
   expire: number | null;
   now: number | null;
   value: any;
@@ -73,12 +73,16 @@ class Persist {
       const res = await this.getItem(key);
       const isExpired = await this.isExpired(res);
 
-      if (!res || !res.value) {
-        return Promise.resolve(null);
-      } else if (isExpired) {
+      if (isExpired) {
         this.remove(key);
         return Promise.resolve(null);
-      } else if (res.value) {
+      }
+
+      if (!res || (res && !res.value)) {
+        return Promise.resolve(null);
+      }
+
+      if (res.value && res.expire) {
         let value = res.value;
         if (this.cacheConfig.isCompress) {
           value = JSON.parse(LZString.decompress(res.value));
@@ -87,23 +91,38 @@ class Persist {
         await this.set(key, res.value, res.expire);
         return Promise.resolve(value);
       }
+
+      // If don't mycache init, return value directly
+      return Promise.resolve(res);
     } catch (err) {
       return Promise.reject(err);
     }
   }
 
   public async gets(keys: string[]): Promise<any> {
-    const res = [];
+    try {
+      const res = [];
 
-    for (const key of keys) {
-      res.push(await this.get(key));
+      for (const key of keys) {
+        res.push(await this.get(key));
+      }
+
+      return Promise.resolve(res);
+    } catch (err) {
+      return Promise.reject(err);
     }
-
-    return Promise.resolve(res);
   }
 
   public async set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     try {
+      const res = await this.getItem(key);
+
+      // If don't mycache init, return value directly
+      if (res && !res.value && !res.expire) {
+        this.setItem(key, value);
+        return Promise.resolve(value);
+      }
+
       const serialize = await this.cacheInstance.getSerializer();
       const now = new Date().getTime();
 
@@ -130,33 +149,35 @@ class Persist {
   }
 
   public async append<T>(key: string, value: T, expire = -1): Promise<T> {
-    let res;
-
     try {
+      let res;
       res = await this.getItem(key);
+      if (!res) { return this.set(key, value, expire); }
+
+      if (utils.isArray(value) && utils.isArray(res.value)) {
+        value = res.value.concat(value);
+      } else if (utils.isPlainObject(value) && utils.isPlainObject(res.value)) {
+        value = utils.extend(res.value, value);
+      }
+
+      expire = expire ? expire : res.expire;
+      return this.set(key, value, expire);
     } catch (err) {
       return Promise.reject(err);
     }
-
-    if (!res) { return this.set(key, value, expire); }
-
-    if (utils.isArray(value) && utils.isArray(res.value)) {
-      value = res.value.concat(value);
-    } else if (utils.isPlainObject(value) && utils.isPlainObject(res.value)) {
-      value = utils.extend(res.value, value);
-    }
-
-    expire = expire ? expire : res.expire;
-    return this.set(key, value, expire);
   }
 
   public async has(key: string): Promise<boolean> {
-    const value = await this.get(key);
+    try {
+      const value = await this.get(key);
 
-    if (value) {
-      return Promise.resolve(true);
-    } else {
-      return Promise.resolve(false);
+      if (value) {
+        return Promise.resolve(true);
+      } else {
+        return Promise.resolve(false);
+      }
+    } catch (err) {
+      return Promise.reject(err);
     }
   }
 
