@@ -9,7 +9,7 @@ interface IDataValue {
   value: any;
 }
 
-class Cache {
+class MemCache {
   private cacheConfig: IConfig;
   private cacheInstance: any;
 
@@ -149,4 +149,4 @@ class Cache {
   }
 }
 
-export default Cache;
+export default MemCache;

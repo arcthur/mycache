@@ -1,11 +1,11 @@
 import test from 'ava';
 import sinon from 'sinon';
-import Cache from '../lib/Cache';
+import MemCache from '../lib/MemCache';
 
 let sandbox;
 
 test.beforeEach(t => {
-  t.context.cache = new Cache();
+  t.context.cache = new MemCache();
   sandbox = sinon.sandbox.create();
 
   const date = new Date('January 1, 2013');
