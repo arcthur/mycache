@@ -23,6 +23,7 @@ export interface IDataValue {
 
 const DEFAULT_CONFIG: IConfig = {
   driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
+  name: 'persist',
   isCompress: false,
   valueMaxLength: 500 * 1024,
 };
