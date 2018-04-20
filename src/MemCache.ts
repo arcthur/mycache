@@ -1,19 +1,11 @@
+import * as typed from './typed';
 import * as utils from './utils';
 
-interface IConfig {
-  name?: string;
-}
-
-interface IDataValue {
-  expire: number | null;
-  value: any;
-}
-
 class MemCache {
-  private cacheConfig: IConfig;
+  private cacheConfig: typed.IMemCacheConfig;
   private cacheInstance: any;
 
-  constructor(config: IConfig = {}) {
+  constructor(config: typed.IMemCacheConfig = {}) {
     this.cacheConfig = utils.extend(config, { name: 'memcache' });
     this.cacheInstance = {};
   }
@@ -32,7 +24,7 @@ class MemCache {
     return Promise.resolve(true);
   }
 
-  public isExpired(value: IDataValue): Promise<boolean> {
+  public isExpired(value: typed.IMemCacheDataValue): Promise<boolean> {
     if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
       return Promise.resolve(true);
     } else {

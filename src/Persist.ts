@@ -1,27 +1,9 @@
 import * as localforage from 'localforage';
 import LZString from './LZString';
+import * as typed from './typed';
 import * as utils from './utils';
 
-export interface IConfig {
-  driver?: string | string[];
-  valueMaxLength?: number;
-  name?: string;
-  storeName?: string;
-  isCompress?: boolean;
-}
-
-export interface IDataMap {
-  key: string;
-  value: IDataValue;
-}
-
-export interface IDataValue {
-  expire: number | null;
-  now: number | null;
-  value: any;
-}
-
-const DEFAULT_CONFIG: IConfig = {
+const DEFAULT_CONFIG: typed.IPersistConfig = {
   driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
   name: 'persist',
   isCompress: false,
@@ -29,23 +11,23 @@ const DEFAULT_CONFIG: IConfig = {
 };
 
 class Persist {
-  private cacheConfig: IConfig;
+  private cacheConfig: typed.IPersistConfig;
   private cacheInstance: any;
 
-  constructor(config: IConfig = {}) {
+  constructor(config: typed.IPersistConfig = {}) {
     this.cacheConfig = utils.extend(config, DEFAULT_CONFIG);
     this.cacheInstance = localforage.createInstance(this.cacheConfig);
   }
 
   public clearExpired(): Promise<boolean> {
-    return this.cacheInstance.iterate((value: IDataValue, key: string) => {
+    return this.cacheInstance.iterate((value: typed.IPersistDataMapValue, key: string) => {
       this.isExpired(value).then((res: boolean) => {
         if (res) { this.remove(key); }
       });
     });
   }
 
-  public isExpired(value: IDataValue): Promise<boolean> {
+  public isExpired(value: typed.IPersistDataMapValue): Promise<boolean> {
     if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
       return Promise.resolve(true);
     } else {
@@ -53,7 +35,7 @@ class Persist {
     }
   }
 
-  public async isOverLength(value: IDataValue): Promise<boolean> {
+  public async isOverLength(value: typed.IPersistDataMapValue): Promise<boolean> {
     const valueMaxLength = this.cacheConfig.valueMaxLength;
     const serialize = await this.cacheInstance.getSerializer();
 
@@ -65,7 +47,7 @@ class Persist {
     });
   }
 
-  public dropInstance(config: IConfig = {}): Promise<void> {
+  public dropInstance(config: typed.IPersistConfig = {}): Promise<void> {
     return this.cacheInstance.dropInstance(config);
   }
 
@@ -200,12 +182,12 @@ class Persist {
 
   public async each<T>(iterator: (value: T, key: string, num: number) => void): Promise<boolean> {
     try {
-      const cache: IDataMap[] = [];
-      await this.cacheInstance.iterate((value: IDataValue, key: string, num: number) => {
+      const cache: typed.IPersistDataMap[] = [];
+      await this.cacheInstance.iterate((value: typed.IPersistDataMapValue, key: string, num: number) => {
         cache.push({ key, value });
       });
 
-      const LRUMap = cache.sort((a: IDataMap, b: IDataMap) => (a.value.now - a.value.now));
+      const LRUMap = cache.sort((a: typed.IPersistDataMap, b: typed.IPersistDataMap) => (a.value.now - a.value.now));
 
       for (let i = 0; i < LRUMap.length; i++) {
         if (iterator) {
