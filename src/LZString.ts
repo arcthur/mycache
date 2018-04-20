@@ -12,7 +12,7 @@ const commonCompress = (
   let i = 0;
   let j = 0;
   let value = 0;
-  const dictionary: any = new Map();
+  const dictionary: any = {};
   let freshNode = true;
   let c = 0;
 
@@ -67,7 +67,7 @@ const commonCompress = (
     }
 
     // Add charCode to the dictionary.
-    dictionary.set(c, node);
+    dictionary[c] = node;
 
     for (j = 1; j < uncompressed.length; j++) {
       c = uncompressed.charCodeAt(j);
@@ -104,7 +104,7 @@ const commonCompress = (
 
         // Is the new charCode a new character
         // that needs to be stored at the root?
-        if (!dictionary.has(c)) {
+        if (dictionary[c] === undefined) {
           // increase token bitlength if necessary
           if (--enlargeIn === 0) {
             enlargeIn = 1 << numBits++;
@@ -130,7 +130,7 @@ const commonCompress = (
               dataVal = 0;
             }
           }
-          dictionary.set(c, commonNode(dictSize++));
+          dictionary[c] = commonNode(dictSize++);
           // Note of that we already wrote
           // the charCode token to the bitstream
           freshNode = true;
@@ -142,7 +142,7 @@ const commonCompress = (
           enlargeIn = 1 << numBits++;
         }
         // set node to first charCode of new prefix
-        node = dictionary.get(c);
+        node = dictionary[c];
       }
     }
 
@@ -165,7 +165,7 @@ const commonCompress = (
     }
 
     // Is c a new character?
-    if (!dictionary.has(c)) {
+    if (dictionary[c] === undefined) {
       // increase token bitlength if necessary
       if (--enlargeIn === 0) {
         enlargeIn = 1 << numBits++;
