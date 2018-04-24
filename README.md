@@ -84,6 +84,7 @@ import { Persist } from 'mycache';
 const persist = new Persist({
   name: 'mycache', // name prefix of key
   storeName: 'persist', // The name of the datastore
+  isCompress: false, // if enable string compress
   valueMaxLength: 500 * 1000, // max length of value
   oldItemsCount: 0.2, // this count of old items
 });
