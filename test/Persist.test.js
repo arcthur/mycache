@@ -206,7 +206,11 @@ test.serial('persist clear expire', async t => {
     await persist.set('a', { a: 1 }, 1000);
     await persist.set('b', { b: 1 }, new Date('January 3, 2013'));
     window.MockDate.set('1/2/2013');
-    await persist.clearExpired();
+
+    const expired = await persist.getExpiredKeys();
+    for (let i = 0; i < expired.length; i++) {
+      await persist.remove(expired[i]);
+    }
 
     return {
       length: await persist.length(),
@@ -214,4 +218,58 @@ test.serial('persist clear expire', async t => {
   });
 
   t.is(result.length, 1);
+});
+
+test.serial('persist clear overlength', async t => {
+  const page = t.context.page;
+
+  const result = await page.evaluate(async () => {
+    const persist = new window.Mycache.Persist({
+      valueMaxLength: 10,
+    });
+    await persist.set('a', { a: 10000, b: 10000 });
+    await persist.set('b', { b: 1 });
+
+    const overlength = await persist.getOverLengthKeys();
+    for (let i = 0; i < overlength.length; i++) {
+      await persist.remove(overlength[i]);
+    }
+
+    return {
+      length: await persist.length(),
+    };
+  });
+
+  t.is(result.length, 1);
+});
+
+test.serial('persist clear old', async t => {
+  const page = t.context.page;
+
+  const result = await page.evaluate(async () => {
+    const persist = new window.Mycache.Persist();
+    await persist.set('a', { a: 1 });
+    await persist.set('b', { b: 1 });
+    await persist.set('c', { c: 1 });
+    await persist.set('d', { d: 1 });
+    await persist.set('e', { e: 1 });
+    await persist.get('d');
+    await persist.get('d');
+    await persist.get('c');
+    await persist.get('b');
+
+    const olds = await persist.getOldKeys();
+    for (let i = 0; i < olds.length; i++) {
+      await persist.remove(olds[i]);
+    }
+    const sortItems = await persist.getSortedItems();
+
+    return {
+      keys: await sortItems.map((value) => value.key),
+      length: await persist.length(),
+    };
+  });
+
+  t.deepEqual(result.keys, ['d', 'b', 'c', 'e']);
+  t.is(result.length, 4);
 });

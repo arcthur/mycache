@@ -1,7 +1,7 @@
 export interface IPersistConfig {
   driver?: string | string[];
   valueMaxLength?: number;
-  oldItemsRatio?: number;
+  oldItemsCount?: number;
   name?: string;
   storeName?: string;
   isCompress?: boolean;
@@ -9,13 +9,19 @@ export interface IPersistConfig {
 
 export interface IPersistDataMap {
   key: string;
-  value: IPersistDataMapValue;
+  expire?: number | null;
+  value?: any;
+  length?: number;
+  now?: number;
+  count?: number;
 }
 
 export interface IPersistDataMapValue {
-  expire: number | null;
-  now: number | null;
-  value: any;
+  expire?: number | null;
+  value?: any;
+  length?: number;
+  now?: number;
+  count?: number;
 }
 
 export interface IMemCacheConfig {
@@ -23,6 +29,6 @@ export interface IMemCacheConfig {
 }
 
 export interface IMemCacheDataValue {
-  expire: number | null;
-  value: any;
+  expire?: number | null;
+  value?: any;
 }

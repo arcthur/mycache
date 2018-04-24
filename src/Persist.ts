@@ -8,53 +8,121 @@ const DEFAULT_CONFIG: typed.IPersistConfig = {
   name: 'persist',
   isCompress: false,
   valueMaxLength: 500 * 1024,
+  oldItemsCount: 0.2,
 };
+
+interface ITempCache {
+  count: number;
+  items: typed.IPersistDataMap;
+}
 
 class Persist {
   private cacheConfig: typed.IPersistConfig;
   private cacheInstance: any;
 
   constructor(config: typed.IPersistConfig = {}) {
-    this.cacheConfig = utils.extend(config, DEFAULT_CONFIG);
+    this.cacheConfig = utils.extend(DEFAULT_CONFIG, config);
     this.cacheInstance = localforage.createInstance(this.cacheConfig);
-  }
-
-  public clearExpired(): Promise<boolean> {
-    return this.cacheInstance.iterate((value: typed.IPersistDataMapValue, key: string) => {
-      this.isExpired(value).then((res: boolean) => {
-        if (res) { this.remove(key); }
-      });
-    });
-  }
-
-  public isExpired(value: typed.IPersistDataMapValue): Promise<boolean> {
-    if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
-      return Promise.resolve(true);
-    } else {
-      return Promise.resolve(false);
-    }
-  }
-
-  public async isOverLength(value: typed.IPersistDataMapValue): Promise<boolean> {
-    const valueMaxLength = this.cacheConfig.valueMaxLength;
-    const serialize = await this.cacheInstance.getSerializer();
-
-    return new Promise<boolean>((resolve, reject) => {
-      serialize.serialize(value, (res: any, err: any) => {
-        if (err) { reject(err); }
-        resolve(res.lenth > (valueMaxLength || 0));
-      });
-    });
   }
 
   public dropInstance(config: typed.IPersistConfig = {}): Promise<void> {
     return this.cacheInstance.dropInstance(config);
   }
 
+  public async getOldKeys(): Promise<string[]> {
+    try {
+      const length = await this.length();
+      const oldItemsCount = this.cacheConfig.oldItemsCount;
+      const oldCount = oldItemsCount < 1 ?
+        Math.floor(length * oldItemsCount) : Math.floor(oldItemsCount);
+
+      const getkeys: string[] = [];
+      const cacheSorted = await this.getSortedItems();
+      const sortedCache = cacheSorted.reverse();
+
+      for (let i = 0; i < sortedCache.length; i++) {
+        const value = sortedCache[i];
+
+        if (i < oldCount) {
+          getkeys.push(value.key);
+        }
+      }
+
+      return Promise.resolve(getkeys);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  public async getExpiredKeys(): Promise<string[]> {
+    try {
+      const getkeys: string[] = [];
+      const keys = await this.keys();
+
+      for (const key of keys) {
+        const isExpired = await this.isExpired(key);
+        if (isExpired) {
+          getkeys.push(key);
+        }
+      }
+
+      return Promise.resolve(getkeys);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  public async getOverLengthKeys(): Promise<string[]> {
+    try {
+      const getkeys: string[] = [];
+      const keys = await this.keys();
+
+      for (const key of keys) {
+        const isOverLength = await this.isOverLength(key);
+        if (isOverLength) {
+          getkeys.push(key);
+        }
+      }
+
+      return Promise.resolve(getkeys);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  public async isOverLength(key: string): Promise<boolean> {
+    try {
+      const res = await this.getItem(key);
+      const valueMaxLength = this.cacheConfig.valueMaxLength;
+
+      if (res && res.length && res.length > valueMaxLength) {
+        return Promise.resolve(true);
+      } else {
+        return Promise.resolve(false);
+      }
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  public async isExpired(key: string): Promise<boolean> {
+    try {
+      const res = await this.getItem(key);
+      const now = new Date().getTime();
+      if (res && res.expire && res.expire > 0 && res.expire < now) {
+        return Promise.resolve(true);
+      } else {
+        return Promise.resolve(false);
+      }
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
   public async get(key: string): Promise<any> {
     try {
       const res = await this.getItem(key);
-      const isExpired = await this.isExpired(res);
+      const isExpired = await this.isExpired(key);
 
       if (isExpired) {
         this.remove(key);
@@ -66,12 +134,11 @@ class Persist {
       }
 
       if (res.value && res.expire) {
-        let value = res.value;
-        if (this.cacheConfig.isCompress) {
-          value = JSON.parse(LZString.decompress(res.value));
-        }
-        // update now time
-        await this.set(key, res.value, res.expire);
+        const value = this.cacheConfig.isCompress ?
+          JSON.parse(LZString.decompress(res.value)) : JSON.parse(res.value);
+
+        // update queue info
+        this.set(key, res.value, res.expire);
         return Promise.resolve(value);
       }
 
@@ -99,30 +166,52 @@ class Persist {
   public async set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     try {
       const res = await this.getItem(key);
-
-      // If don't mycache init, return value directly
-      if (res && !res.value && !res.expire) {
-        this.setItem(key, value);
-        return Promise.resolve(value);
-      }
-
-      const serialize = await this.cacheInstance.getSerializer();
       const now = new Date().getTime();
 
-      if (utils.isDate(expire)) {
-        expire = (expire as Date).getTime();
-      } else if (utils.isNumber(expire) && expire > 0) {
-        // expire number is second
-        expire = now + (expire as number) * 1000;
+      // If don't use mycache init, return value directly
+      if (res && !res.value && !res.expire) {
+        return this.setItem(key, value);
       }
 
-      const setRes = await this.setItem(key, {
-        value: this.cacheConfig.isCompress ? LZString.compress(JSON.stringify(value)) : value,
-        expire,
+      let setRes;
+      let setVal;
+
+      if (res && res.value === value && res.expire === expire) {
+        setRes = await this.setItem(key, { ...res, now, count: ++res.count });
+        setVal = this.cacheConfig.isCompress ?
+          JSON.parse(LZString.decompress(setRes.value as string)) : setRes.value;
+        return Promise.resolve(setVal);
+      }
+
+      let expireTime;
+      if (utils.isDate(expire)) {
+        expireTime = (expire as Date).getTime();
+      } else if (utils.isNumber(expire) && expire > 0) {
+        // expire number is second
+        expireTime = now + (expire as number) * 1000;
+      } else {
+        expireTime = -1;
+      }
+
+      let realValue: any;
+      const stringifyValue = JSON.stringify(value);
+      if (res && value === res.value) {
+        realValue = value;
+      } else if (this.cacheConfig.isCompress) {
+        realValue = LZString.compress(stringifyValue);
+      } else {
+        realValue = stringifyValue;
+      }
+
+      setRes = await this.setItem(key, {
         now,
+        count: res && res.count ? ++res.count : 0,
+        length: realValue.length,
+        value: realValue,
+        expire: expireTime,
       });
 
-      const setVal = this.cacheConfig.isCompress ?
+      setVal = this.cacheConfig.isCompress ?
         JSON.parse(LZString.decompress(setRes.value as string)) : setRes.value;
 
       return Promise.resolve(setVal);
@@ -133,14 +222,16 @@ class Persist {
 
   public async append<T>(key: string, value: T, expire = -1): Promise<T> {
     try {
-      let res;
-      res = await this.getItem(key);
+      const res = await this.getItem(key);
       if (!res) { return this.set(key, value, expire); }
 
-      if (utils.isArray(value) && utils.isArray(res.value)) {
-        value = res.value.concat(value);
-      } else if (utils.isPlainObject(value) && utils.isPlainObject(res.value)) {
-        value = utils.extend(res.value, value);
+      const realValue = this.cacheConfig.isCompress ?
+        JSON.parse(LZString.decompress(res.value)) : JSON.parse(res.value);
+
+      if (utils.isArray(value) && utils.isArray(realValue)) {
+        value = (realValue as any).concat(value);
+      } else if (utils.isPlainObject(value) && utils.isPlainObject(realValue)) {
+        value = utils.extend(realValue, value);
       }
 
       expire = expire ? expire : res.expire;
@@ -152,9 +243,9 @@ class Persist {
 
   public async has(key: string): Promise<boolean> {
     try {
-      const value = await this.get(key);
+      const res = await this.get(key);
 
-      if (value) {
+      if (res) {
         return Promise.resolve(true);
       } else {
         return Promise.resolve(false);
@@ -168,30 +259,28 @@ class Persist {
     return this.cacheInstance.removeItem(key);
   }
 
-  public keys(): Promise<string[]> {
-    return this.cacheInstance.keys();
-  }
-
   public clear(): Promise<void> {
     return this.cacheInstance.clear();
+  }
+
+  public keys(): Promise<string[]> {
+    return this.cacheInstance.keys();
   }
 
   public length(): Promise<number> {
     return this.cacheInstance.length();
   }
 
-  public async each<T>(iterator: (value: T, key: string, num: number) => void): Promise<boolean> {
+  public async each(iterator: (value: any, key: string, num: number) => void): Promise<boolean> {
     try {
-      const cache: typed.IPersistDataMap[] = [];
-      await this.cacheInstance.iterate((value: typed.IPersistDataMapValue, key: string, num: number) => {
-        cache.push({ key, value });
-      });
+      const cache = await this.keys();
 
-      const LRUMap = cache.sort((a: typed.IPersistDataMap, b: typed.IPersistDataMap) => (a.value.now - a.value.now));
+      for (let i = 0; i < cache.length; i++) {
+        const key = cache[i];
+        const value = await this.get(key);
 
-      for (let i = 0; i < LRUMap.length; i++) {
         if (iterator) {
-          iterator(LRUMap[i].value.value, LRUMap[i].key, i);
+          await iterator(value, key, i);
         }
       }
 
@@ -201,11 +290,53 @@ class Persist {
     }
   }
 
+  public async getSortedItems(): Promise<typed.IPersistDataMap[]> {
+    try {
+      const keys = await this.keys();
+
+      const cache: typed.IPersistDataMap[] = [];
+      for (const key of keys) {
+        const value = await this.getItem(key);
+        cache.push({ ...value, key });
+      }
+
+      const countGroup: any = {};
+      for (const item of cache) {
+        if (!countGroup[item.count]) { countGroup[item.count] = []; }
+        countGroup[item.count].push(item);
+      }
+
+      let sortCountSet: ITempCache[] = [];
+      for (const i in countGroup) {
+        if (countGroup.hasOwnProperty(i)) {
+          // sort by now desc
+          sortCountSet.push({
+            count: parseInt(i, 10),
+            items: countGroup[i].sort(
+              (a: typed.IPersistDataMap, b: typed.IPersistDataMap) => b.now - a.now),
+          });
+        }
+      }
+
+      // sort by count desc
+      sortCountSet = sortCountSet.sort((a: ITempCache, b: ITempCache) => b.count - a.count);
+
+      let finalCache: typed.IPersistDataMap[] = [];
+      for (const res of sortCountSet) {
+        finalCache = finalCache.concat(res.items);
+      }
+
+      return Promise.resolve(finalCache);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
   private getItem(key: string): Promise<any> {
     return this.cacheInstance.getItem(key);
   }
 
-  private async setItem<T>(key: string, value: T): Promise<T> {
+  private setItem<T>(key: string, value: T): Promise<T> {
     return this.cacheInstance.setItem(key, value);
   }
 }
