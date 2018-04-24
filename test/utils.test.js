@@ -42,3 +42,8 @@ test('omit', t => {
   t.deepEqual(utils.omit({ a: 1, b: 2 }, 'c'), { a: 1, b: 2 });
   t.deepEqual(utils.omit([], 'c'), {});
 });
+
+test('utf16ByteLength', t => {
+  t.deepEqual(utils.utf16ByteLength('abcd'), 8);
+  t.deepEqual(utils.utf16ByteLength('𐐷𐐷'), 8);
+});

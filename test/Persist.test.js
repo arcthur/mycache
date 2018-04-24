@@ -225,7 +225,7 @@ test.serial('persist clear overlength', async t => {
 
   const result = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist({
-      valueMaxLength: 10,
+      valueMaxLength: 20,
     });
     await persist.set('a', { a: 10000, b: 10000 });
     await persist.set('b', { b: 1 });

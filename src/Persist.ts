@@ -7,7 +7,7 @@ const DEFAULT_CONFIG: typed.IPersistConfig = {
   driver: [localforage.INDEXEDDB, localforage.LOCALSTORAGE],
   name: 'persist',
   isCompress: false,
-  valueMaxLength: 500 * 1024,
+  valueMaxLength: 20 * 1024,
   oldItemsCount: 0.2,
 };
 
@@ -135,7 +135,7 @@ class Persist {
 
       if (res.value && res.expire) {
         const value = this.cacheConfig.isCompress ?
-          JSON.parse(LZString.decompress(res.value)) : JSON.parse(res.value);
+          JSON.parse(LZString.decompressFromUTF16(res.value)) : JSON.parse(res.value);
 
         // update queue info
         this.set(key, res.value, res.expire);
@@ -179,7 +179,7 @@ class Persist {
       if (res && res.value === value && res.expire === expire) {
         setRes = await this.setItem(key, { ...res, now, count: ++res.count });
         setVal = this.cacheConfig.isCompress ?
-          JSON.parse(LZString.decompress(setRes.value as string)) : setRes.value;
+          JSON.parse(LZString.decompressFromUTF16(setRes.value as string)) : setRes.value;
         return Promise.resolve(setVal);
       }
 
@@ -198,7 +198,7 @@ class Persist {
       if (res && value === res.value) {
         realValue = value;
       } else if (this.cacheConfig.isCompress) {
-        realValue = LZString.compress(stringifyValue);
+        realValue = LZString.compressToUTF16(stringifyValue);
       } else {
         realValue = stringifyValue;
       }
@@ -206,13 +206,13 @@ class Persist {
       setRes = await this.setItem(key, {
         now,
         count: res && res.count ? ++res.count : 0,
-        length: realValue.length,
+        length: utils.utf16ByteLength(realValue),
         value: realValue,
         expire: expireTime,
       });
 
       setVal = this.cacheConfig.isCompress ?
-        JSON.parse(LZString.decompress(setRes.value as string)) : setRes.value;
+        JSON.parse(LZString.decompressFromUTF16(setRes.value as string)) : setRes.value;
 
       return Promise.resolve(setVal);
     } catch (err) {
@@ -226,7 +226,7 @@ class Persist {
       if (!res) { return this.set(key, value, expire); }
 
       const realValue = this.cacheConfig.isCompress ?
-        JSON.parse(LZString.decompress(res.value)) : JSON.parse(res.value);
+        JSON.parse(LZString.decompressFromUTF16(res.value)) : JSON.parse(res.value);
 
       if (utils.isArray(value) && utils.isArray(realValue)) {
         value = (realValue as any).concat(value);

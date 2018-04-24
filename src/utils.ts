@@ -68,4 +68,21 @@ function omit(obj: any, props: any) {
   return res;
 }
 
-export { isDate, isNumber, isArray, isPlainObject, extend, omit };
+// http://www.alloyteam.com/2013/12/js-calculate-the-number-of-bytes-occupied-by-a-string/
+function utf16ByteLength(str: string): number {
+  let total = 0;
+  let charCode;
+
+  for (let i = 0; i < str.length; i++) {
+    charCode = str.charCodeAt(i);
+    if (charCode <= 0xffff) {
+      total += 2;
+    } else {
+      total += 4;
+    }
+  }
+
+  return total;
+}
+
+export { isDate, isNumber, isArray, isPlainObject, extend, omit, utf16ByteLength };

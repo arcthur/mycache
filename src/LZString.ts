@@ -2,6 +2,7 @@
 // private property
 const f = String.fromCharCode;
 const commonNode = (val: any) => ({ v: val, d: {} });
+const getCharFromUTF16 = (a: any) => f(a + 32);
 
 const commonCompress = (
   uncompressed: string | null,
@@ -330,6 +331,23 @@ const commonDecompressFromArray = (compressed: string[]) => {
 };
 
 const LZString = {
+  compressToUTF16(input: string): string {
+    if (input === undefined || input === null) { return ''; }
+
+    const compressed = commonCompress(input, 15, getCharFromUTF16);
+    compressed.push(' ');
+    return compressed.join('');
+  },
+
+  decompressFromUTF16(compressed: string): string {
+    if (compressed === null) { return ''; }
+    if (compressed === '') { return null; }
+
+    return commonDecompress(compressed.length, 15, (index) => {
+      return compressed.charCodeAt(index) - 32;
+    });
+  },
+
   compress(uncompressed: string): string {
     return commonCompressToArray(uncompressed).join('');
   },
