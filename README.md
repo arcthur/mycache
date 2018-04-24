@@ -7,7 +7,11 @@
 
 Mycache is a cache library enhanced front end local cache. Mycache provides two kinds of cache: persist cache and memory cache. Persist cache is used [localforage](https://github.com/localForage/localForage).
 
+## Installation
+NPM is the easiest and fastest way to get started using Mycache.
+
 ```bash
+# latest stable
 npm install mycache
 ```
 
@@ -110,8 +114,6 @@ persist.clear()
 persist.length()
 // each all keys by callback
 persist.each(iterator: (value: any, key: string, iterationNumber: number) => void)
-// get all expired keys
-persist.getExpiredKeys()
 // if the key is expired
 persist.isExpired(key: string)
 // get all expired keys
@@ -125,3 +127,6 @@ persist.getOldKeys()
 // get items by sorted
 persist.getSortedItems();
 ```
+
+## License
+[MIT](http://opensource.org/licenses/MIT)
