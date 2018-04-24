@@ -51,31 +51,29 @@ const cache = new MemCache({
 
 MemCache API:
 
-```js
+```ts
 // get value of key
-cache.get(key: string)
+function get(key: string): Promise<any> {}
 // get all value of keys
-cache.gets();
+function gets() : Promise<any> {}
 // set key value and expire time
-cache.set(key: sting, value: any, expire: number | Date = -1)
+function set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {}
 // append key value and expire time
-cache.append(key: sting, value: any, expire: number | Date = -1)
+function append<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {}
 // if the key has in local
-cache.has(key: string)
+function has(key: string): Promise<boolean> {}
 // remove key
-cache.remove(key: string)
+function remove(key: string): Promise<void> {}
 // get all keys
-cache.keys()
+function keys(): Promise<string[]> {}
 // clear all keys
-cache.clear()
+function clear(): Promise<void> {}
 // the length of all keys
-cache.length()
+function length(): Promise<number> {}
 // each all keys by callback
-cache.each(iterator: (value: any, key: string, iterationNumber: number) => void)
-// get all expired keys
-cache.getExpiredKeys()
+function each(iterator: (value: any, key: string, iterationNumber: number) => void): Promise<boolean> {}
 // if the key is expired
-cache.isExpired(key: string)
+function isExpired(key: string): Promise<boolean> {}
 ```
 
 Persist Config:
@@ -93,39 +91,39 @@ const persist = new Persist({
 
 Persist API:
 
-```js
+```ts
 // get value of key
-persist.get(key: string)
+function get(key: string): Promise<any> {}
 // get all value of keys
-persist.gets();
+function gets() : Promise<any> {}
 // set key value and expire time
-persist.set(key: sting, value: any, expire: number | Date = -1)
+function set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {}
 // append key value and expire time
-persist.append(key: sting, value: any, expire: number | Date = -1)
+function append<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {}
 // if the key has in local
-persist.has(key: string)
+function has(key: string): Promise<boolean> {}
 // remove key
-persist.remove(key: string)
+function remove(key: string): Promise<void> {}
 // get all keys
-persist.keys()
+function keys(): Promise<string[]> {}
 // clear all keys
-persist.clear()
+function clear(): Promise<void> {}
 // the length of all keys
-persist.length()
+function length(): Promise<number> {}
 // each all keys by callback
-persist.each(iterator: (value: any, key: string, iterationNumber: number) => void)
+function each(iterator: (value: any, key: string, iterationNumber: number) => void): Promise<boolean> {}
 // if the key is expired
-persist.isExpired(key: string)
+function isExpired(key: string): Promise<boolean> {}
 // get all expired keys
-persist.getExpiredKeys()
+function getExpiredKeys(): Promise<string[]> {}
 // if the key is overlength
-persist.isOverLength(key: string)
+function isOverLength(key: string): Promise<boolean> {}
 // get all overlength keys
-persist.getOverLengthKeys()
+function getOverLengthKeys(): Promise<string[]> {}
 // if the key is old
-persist.getOldKeys()
+function getOldKeys(): Promise<string[]> {}
 // get items by sorted
-persist.getSortedItems();
+function getSortedItems(): Promise<typed.IPersistDataMap[]> {}
 ```
 
 ## License
