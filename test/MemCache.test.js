@@ -107,7 +107,11 @@ test.serial('cache clear expire', async t => {
   await cache.set('a', { a: 1 }, 1000);
   await cache.set('b', { b: 1 }, new Date('January 2, 2013'));
   clock.tick(1000001);
-  await cache.clearExpired();
+
+  const expired = await cache.getExpiredKeys();
+  for (let i = 0; i < expired.length; i++) {
+    await cache.remove(expired[i]);
+  }
 
   t.is(await cache.length(), 1);
 });

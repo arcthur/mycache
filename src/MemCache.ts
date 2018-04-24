@@ -10,41 +10,45 @@ class MemCache {
     this.cacheInstance = {};
   }
 
-  public async clearExpired(): Promise<boolean> {
-    const keys = Object.keys(this.cacheInstance);
+  public async getExpiredKeys(): Promise<string[]> {
+    try {
+      const getkeys: string[] = [];
+      const keys = await this.keys();
 
-    for (const key of keys) {
-      const value = this.cacheInstance[key];
-      const realKey = key.replace(this.cacheConfig.name + '/', '');
+      for (const key of keys) {
+        const isExpired = await this.isExpired(key);
+        if (isExpired) {
+          getkeys.push(key);
+        }
+      }
 
-      const isExpired = await this.isExpired(value);
-      if (isExpired) { this.remove(realKey); }
+      return Promise.resolve(getkeys);
+    } catch (err) {
+      return Promise.reject(err);
     }
-
-    return Promise.resolve(true);
   }
 
-  public isExpired(value: typed.IMemCacheDataValue): Promise<boolean> {
-    if (value && value.expire && value.expire > 0 && value.expire < new Date().getTime()) {
+  public async isExpired(key: string): Promise<boolean> {
+    const newkey = this.getKey(key);
+    const res = this.cacheInstance[newkey];
+    const now = new Date().getTime();
+
+    if (res && res.expire && res.expire > 0 && res.expire < now) {
       return Promise.resolve(true);
     } else {
       return Promise.resolve(false);
     }
   }
 
-  public getKey(key: string): string {
-    return this.cacheConfig.name + '/' + key;
-  }
-
   public async get(key: string): Promise<any> {
-    key = this.getKey(key);
-    const res = this.cacheInstance[key];
-    const isExpired = await this.isExpired(res);
+    const newkey = this.getKey(key);
+    const res = this.cacheInstance[newkey];
+    const isExpired = await this.isExpired(key);
 
     if (!res || !res.value) {
       return Promise.resolve(null);
     } else if (isExpired) {
-      this.remove(key);
+      this.remove(newkey);
       return Promise.resolve(null);
     } else if (res.value) {
       return Promise.resolve(res.value);
@@ -61,7 +65,7 @@ class MemCache {
   }
 
   public set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
-    key = this.getKey(key);
+    const newkey = this.getKey(key);
     if (utils.isDate(expire)) {
       expire = (expire as Date).getTime();
     } else if (utils.isNumber(expire) && expire > 0) {
@@ -69,7 +73,7 @@ class MemCache {
       expire = new Date().getTime() + (expire as number) * 1000;
     }
 
-    this.cacheInstance[key] = { value, expire };
+    this.cacheInstance[newkey] = { value, expire };
     return Promise.resolve(value);
   }
 
@@ -99,17 +103,23 @@ class MemCache {
   }
 
   public remove(key: string): Promise<void> {
-    key = this.getKey(key);
-    if (this.cacheInstance[key]) {
-      this.cacheInstance[key] = null;
-      this.cacheInstance = utils.omit(this.cacheInstance, key);
+    const newkey = this.getKey(key);
+    if (this.cacheInstance[newkey]) {
+      this.cacheInstance[newkey] = null;
+      this.cacheInstance = utils.omit(this.cacheInstance, newkey);
     }
 
     return Promise.resolve();
   }
 
   public keys(): Promise<string[]> {
-    return Promise.resolve(Object.keys(this.cacheInstance));
+    const keys = Object.keys(this.cacheInstance);
+    const getKeys: string[] = [];
+
+    for (const key of keys) {
+      getKeys.push(key.replace(this.cacheConfig.name + '/', ''));
+    }
+    return Promise.resolve(getKeys);
   }
 
   public clear(): Promise<void> {
@@ -138,6 +148,10 @@ class MemCache {
     }
 
     return Promise.resolve(true);
+  }
+
+  private getKey(key: string): string {
+    return this.cacheConfig.name + '/' + key;
   }
 }
 
