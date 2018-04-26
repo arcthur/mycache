@@ -143,7 +143,7 @@ class Persist {
 
         const newValue = await this.valueCacheInstance.get(key);
         // update meta info
-        await this.setMetaCount(key);
+        await this.setMeta(key);
 
         return Promise.resolve(newValue);
       }
@@ -185,7 +185,7 @@ class Persist {
     }
   }
 
-  public async append(key: string, value: any, expire = -1): Promise<any> {
+  public async append(key: string, value: any, expire: number | Date = -1): Promise<any> {
     try {
       const res = await this.getMeta(key);
 
@@ -312,34 +312,10 @@ class Persist {
     return expire && expire > 0 && expire < now;
   }
 
-  private async setMetaCount(key: string): Promise<string> {
+  private async setMeta(key: string, value: any = '', expire: number | Date = -1): Promise<string> {
     try {
       const res = await this.getMeta(key);
       const now = new Date().getTime();
-
-      let count = 0;
-      if (res && res.count !== undefined) {
-        count = res.count + 1;
-      }
-
-      const metaValue = { ...res, now, count };
-
-      const realValue = this.cacheConfig.isCompress ?
-        LZString.compressToUTF16(JSON.stringify(metaValue)) : JSON.stringify(metaValue);
-
-      return this.metaCacheInstance.set(key, realValue);
-    } catch (err) {
-      return Promise.reject(err);
-    }
-  }
-
-  private async setMeta(key: string, value: any, expire: number | Date = -1): Promise<string> {
-    try {
-      const res = await this.getMeta(key);
-      const now = new Date().getTime();
-
-      let metaValue;
-      const length = utils.utf16ByteLength(JSON.stringify(value));
 
       let expireTime;
       if (utils.isDate(expire)) {
@@ -352,16 +328,25 @@ class Persist {
       }
 
       let count = 0;
-      if (res && res.count) {
+      if (res && res.count !== undefined) {
         count = res.count + 1;
       }
 
-      metaValue = {
-        now,
-        length,
-        count,
-        expire: expireTime,
-      };
+      let metaValue;
+      if (value) {
+        metaValue = {
+          length: utils.utf16ByteLength(JSON.stringify(value)),
+          now,
+          count,
+          expire: expireTime,
+        };
+      } else {
+        metaValue = {
+          ...res,
+          now,
+          count,
+        };
+      }
 
       const realValue = this.cacheConfig.isCompress ?
         LZString.compressToUTF16(JSON.stringify(metaValue)) : JSON.stringify(metaValue);
