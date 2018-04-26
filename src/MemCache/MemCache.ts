@@ -1,5 +1,5 @@
-import * as typed from './typed';
-import * as utils from './utils';
+import * as typed from '../typed';
+import * as utils from '../Utils/utils';
 
 class MemCache {
   private cacheConfig: typed.IMemCacheConfig;

@@ -7,21 +7,28 @@ export interface IPersistConfig {
   isCompress?: boolean;
 }
 
-export interface IPersistDataMap {
+export interface IPersistMetaDataMap {
   key: string;
-  expire?: number | null;
-  value?: any;
+  expire?: number;
   length?: number;
   now?: number;
   count?: number;
 }
 
-export interface IPersistDataMapValue {
-  expire?: number | null;
-  value?: any;
+export interface IPersistMetaDataMapValue {
+  expire?: number;
   length?: number;
   now?: number;
   count?: number;
+}
+
+export interface IPersistValueDataMap {
+  key: string;
+  value?: any;
+}
+
+export interface IPersistValueDataMapValue {
+  value?: any;
 }
 
 export interface IMemCacheConfig {
