@@ -87,7 +87,7 @@ const persist = new Persist({
   name: 'mycache', // name prefix of key
   storeName: 'persist', // The name of the datastore
   isCompress: false, // if enable string compress
-  valueMaxLength: 500 * 1000, // max length of value
+  valueMaxLength: 20 * 1000, // max length of value
   oldItemsCount: 0.2, // this count of old items
 });
 ```
@@ -126,7 +126,7 @@ function getOverLengthKeys(): Promise<string[]> {}
 // if the key is old
 function getOldKeys(): Promise<string[]> {}
 // get items by sorted
-function getSortedItems(): Promise<typed.IPersistDataMap[]> {}
+function getSortedItems(): Promise<typed.IPersistMetaDataMap[]> {}
 ```
 
 ## License
