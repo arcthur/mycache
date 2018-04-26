@@ -1,5 +1,5 @@
 import test from 'ava';
-import Persist from '../lib/Persist';
+import Persist from '../lib/Persist/Persist';
 import fs from 'fs';
 import puppeteer from 'puppeteer';
 

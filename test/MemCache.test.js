@@ -1,6 +1,6 @@
 import test from 'ava';
 import sinon from 'sinon';
-import MemCache from '../lib/MemCache';
+import MemCache from '../lib/MemCache/MemCache';
 
 let sandbox;
 

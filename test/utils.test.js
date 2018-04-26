@@ -1,5 +1,5 @@
 import test from 'ava';
-import * as utils from '../lib/utils';
+import * as utils from '../lib/Utils/utils';
 
 test('isDate', t => {
   t.false(utils.isDate(100));

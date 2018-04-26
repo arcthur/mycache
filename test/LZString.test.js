@@ -1,5 +1,5 @@
 import test from 'ava';
-import LZString from '../lib/LZString';
+import LZString from '../lib/Utils/LZString';
 
 function test_set(compress, decompress) {
   test('compresses and decompresses  "Hello world!"', (t) => {
