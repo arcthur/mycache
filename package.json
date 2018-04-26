@@ -28,7 +28,7 @@
     "url": "git+https://github.com/arcthur/mycache.git"
   },
   "scripts": {
-    "build": "cross-env rimraf build dist && tsc && rollup -c && node ./scripts/bundles",
+    "build": "cross-env rimraf lib build dist && tsc && rollup -c && node ./scripts/bundles",
     "dev": "tsc --watch src",
     "lint": "tslint src/*",
     "test": "npm run build && nyc ava",
