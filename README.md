@@ -5,7 +5,9 @@
 [![Dependency Status](https://img.shields.io/david/arcthur/mycache.svg)](https://david-dm.org/arcthur/mycache)
 [![npm](https://img.shields.io/npm/dm/mycache.svg?maxAge=2592000)](https://npmcharts.com/compare/mycache?minimal=true)
 
-Mycache is a cache library enhanced front end local cache. Mycache provides two kinds of cache: persist cache and memory cache. Persist cache is used [localforage](https://github.com/localForage/localForage).
+Mycache is a cache library enhanced front end local cache, and provides two kinds of cache: persist cache and memory cache.
+
+The persist cache use two park to store, localStorage is responsible for store the meta info, and indexeddb is responsible for store value.
 
 ## Installation
 NPM is the easiest and fastest way to get started using Mycache.
