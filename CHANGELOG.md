@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning(http://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2018-04-27
+### Added
+- Add auto clear keys when the store exceeded quota
+
 ## [0.4.0] - 2018-04-26
 ### Changed
 - Use localStorage to store meta info, and use indexeddb to store value
