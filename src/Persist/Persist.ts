@@ -181,6 +181,11 @@ class Persist {
       await this.setMeta(key, value, expire);
       return this.valueCacheInstance.set(key, value);
     } catch (err) {
+      if (err.name.toUpperCase().indexOf('QUOTA') >= 0) {
+        await this.clearKeys();
+        return Promise.resolve(null);
+      }
+
       return Promise.reject(err);
     }
   }
@@ -198,6 +203,11 @@ class Persist {
 
       return Promise.resolve(newValue);
     } catch (err) {
+      if (err.name.toUpperCase().indexOf('QUOTA') >= 0) {
+        await this.clearKeys();
+        return Promise.resolve(null);
+      }
+
       return Promise.reject(err);
     }
   }
@@ -368,6 +378,26 @@ class Persist {
       }
 
       return Promise.resolve(value);
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  private async clearKeys(): Promise<boolean> {
+    try {
+      let keys = await this.getExpiredKeys();
+      keys.concat(await this.getOverLengthKeys());
+      keys.concat(await this.getOldKeys());
+
+      keys = keys.sort().filter((item, index, array) => {
+        return !index || item !== array[index - 1];
+      });
+
+      for (const key of keys) {
+        await this.remove(key);
+      }
+
+      return Promise.resolve(true);
     } catch (err) {
       return Promise.reject(err);
     }
