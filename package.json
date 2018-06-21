@@ -1,6 +1,6 @@
 {
   "name": "mycache",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A Cache library",
   "keywords": [
     "cache",
@@ -17,6 +17,7 @@
     "arcthur <arthurtemptation@gmail.com> (https://github.com/arcthur)"
   ],
   "files": [
+    "src",
     "dist"
   ],
   "main": "dist/cjs",
