@@ -1,4 +1,4 @@
-import * as localforage from 'localforage';
+import * as localForage from 'localforage';
 import * as utils from '../Utils/utils';
 
 interface IPersistValueConfig {
@@ -11,13 +11,13 @@ const DEFAULT_CONFIG: IPersistValueConfig = {
 
 class PersistValue {
   private cacheConfig: IPersistValueConfig;
-  private cacheInstance: any;
+  private cacheInstance: LocalForage;
 
   constructor(config: IPersistValueConfig = {}) {
     this.cacheConfig = utils.extend(DEFAULT_CONFIG, config);
 
-    this.cacheInstance = localforage.createInstance({
-      driver: localforage.INDEXEDDB,
+    this.cacheInstance = localForage.createInstance({
+      driver: localForage.INDEXEDDB,
       name: this.cacheConfig.name,
       storeName: 'store' + this.cacheConfig.name,
     });

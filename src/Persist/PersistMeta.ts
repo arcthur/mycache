@@ -1,4 +1,4 @@
-import * as localforage from 'localforage';
+import * as localForage from 'localforage';
 import * as utils from '../Utils/utils';
 
 interface IPersistMetaConfig {
@@ -11,13 +11,13 @@ const DEFAULT_CONFIG: IPersistMetaConfig = {
 
 class PersistMeta {
   private cacheConfig: IPersistMetaConfig;
-  private cacheInstance: any;
+  private cacheInstance: LocalForage;
 
   constructor(config: IPersistMetaConfig = {}) {
     this.cacheConfig = utils.extend(DEFAULT_CONFIG, config);
 
-    this.cacheInstance = localforage.createInstance({
-      driver: localforage.LOCALSTORAGE,
+    this.cacheInstance = localForage.createInstance({
+      driver: localForage.LOCALSTORAGE,
       name: this.cacheConfig.name,
     });
   }
@@ -26,7 +26,7 @@ class PersistMeta {
     return this.cacheInstance.getItem(key);
   }
 
-  public set(key: string, value: string): Promise<string> {
+  public set<T>(key: string, value: T): Promise<T> {
     return this.cacheInstance.setItem(key, value);
   }
 

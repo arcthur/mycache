@@ -1,4 +1,3 @@
-import * as localforage from 'localforage';
 import * as typed from '../typed';
 import LZString from '../Utils/LZString';
 import * as utils from '../Utils/utils';
@@ -137,7 +136,7 @@ class Persist {
         const isExpired = this.expiredVaule(res.expire);
 
         if (isExpired) {
-          this.remove(key);
+          await this.remove(key);
           return Promise.resolve(null);
         }
 
@@ -169,7 +168,7 @@ class Persist {
     }
   }
 
-  public async set(key: string, value: any, expire: number | Date = -1): Promise<any> {
+  public async set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     try {
       const res = await this.getMeta(key);
 
@@ -190,7 +189,7 @@ class Persist {
     }
   }
 
-  public async append(key: string, value: any, expire: number | Date = -1): Promise<any> {
+  public async append<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
     try {
       const res = await this.getMeta(key);
 
