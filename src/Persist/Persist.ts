@@ -109,12 +109,12 @@ class Persist {
     }
   }
 
-  public async isExpired(key: string): Promise<boolean> {
+  public async isExpired(key: string, currentTime: number = new Date().getTime()): Promise<boolean> {
     try {
       const res = await this.getMeta(key);
 
       if (res && res.expire) {
-        return Promise.resolve(this.expiredVaule(res.expire));
+        return Promise.resolve(this.expiredVaule(res.expire, currentTime));
       } else {
         return Promise.resolve(false);
       }
@@ -123,7 +123,7 @@ class Persist {
     }
   }
 
-  public async get(key: string): Promise<any> {
+  public async get(key: string, currentTime: number = new Date().getTime()): Promise<any> {
     try {
       const res = await this.getMeta(key);
 
@@ -133,7 +133,7 @@ class Persist {
           res.expire !== undefined &&
           res.now !== undefined &&
           res.count !== undefined) {
-        const isExpired = this.expiredVaule(res.expire);
+        const isExpired = this.expiredVaule(res.expire, currentTime);
 
         if (isExpired) {
           await this.remove(key);
@@ -316,9 +316,8 @@ class Persist {
     }
   }
 
-  private expiredVaule(expire: number): boolean {
-    const now = new Date().getTime();
-    return expire && expire > 0 && expire < now;
+  private expiredVaule(expire: number, currentTime: number): boolean {
+    return expire && expire > 0 && expire < currentTime;
   }
 
   private async setMeta(key: string, value: any = '', expire: number | Date = -1): Promise<string> {
