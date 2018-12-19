@@ -1,15 +1,17 @@
 {
   "compilerOptions": {
-    "outDir": "./lib",
+    "outDir": "./es",
     "allowJs": true,
     "sourceMap": true,
     "target": "es5",
     "lib": ["es2017", "dom"],
     "moduleResolution": "node",
     "strict": true,
-    "strictNullChecks": false
+    "strictNullChecks": false,
+    "noUnusedLocals": true
   },
   "files": [
+    "src/typings.d.ts",
     "src/index.ts"
   ]
 }

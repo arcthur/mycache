@@ -7,7 +7,7 @@ test.beforeEach(async t => {
   const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
 
-  const preloadCacheFile = fs.readFileSync(__dirname + '/../dist/umd/mycache.prod.min.js', 'utf8');
+  const preloadCacheFile = fs.readFileSync(__dirname + '/../umd/mycache.min.js', 'utf8');
   await page.evaluateOnNewDocument(preloadCacheFile);
 
   const preloadDateFile = fs.readFileSync(__dirname + '/MockDate.js', 'utf8');
@@ -27,8 +27,8 @@ test.serial('persist set get item', async t => {
 
   const result = await page.evaluate(async () => {
     const persist = new window.Mycache.Persist();
-    const setARes = await persist.set('a', { a: 1 });
-    const setBRes = await persist.set('b', { b: 1 });
+    await persist.set('a', { a: 1 });
+    await persist.set('b', { b: 1 });
 
     return {
       aVal: await persist.get('a'),
@@ -49,8 +49,8 @@ test.serial('persist set get item using compress', async t => {
     const persist = new window.Mycache.Persist({
       isCompress: true,
     });
-    const setARes = await persist.set('a', { a: 1 });
-    const setBRes = await persist.set('b', { b: 1 });
+    await persist.set('a', { a: 1 });
+    await persist.set('b', { b: 1 });
 
     return {
       aVal: await persist.get('a'),

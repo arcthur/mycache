@@ -1,4 +1,4 @@
-import * as typed from '../typed';
+import * as typed from '../typings';
 import * as utils from '../Utils/utils';
 
 class MemCache {
@@ -80,7 +80,9 @@ class MemCache {
   public append<T>(key: string, value: T, expire = -1): Promise<T> {
     const res = this.cacheInstance[this.getKey(key)];
 
-    if (!res) { return this.set(key, value, expire); }
+    if (!res) {
+      return this.set(key, value, expire);
+    }
 
     if (utils.isArray(value) && utils.isArray(res.value)) {
       value = res.value.concat(value);
@@ -137,14 +139,18 @@ class MemCache {
     }
   }
 
-  public async each<T>(iterator: (value: T, key: string, iterationNumber: number) => void): Promise<boolean> {
+  public async each<T>(
+    iterator: (value: T, key: string, iterationNumber: number) => void
+  ): Promise<boolean> {
     const keys = Object.keys(this.cacheInstance);
 
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i].replace(this.cacheConfig.name + '/', '');
       const val = await this.get(key);
 
-      if (iterator) { iterator(val, key, i); }
+      if (iterator) {
+        iterator(val, key, i);
+      }
     }
 
     return Promise.resolve(true);

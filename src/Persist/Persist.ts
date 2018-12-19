@@ -1,4 +1,4 @@
-import * as typed from '../typed';
+import * as typed from '../typings';
 import LZString from '../Utils/LZString';
 import * as utils from '../Utils/utils';
 import PersistMeta from './PersistMeta';
@@ -37,8 +37,10 @@ class Persist {
     try {
       const length = await this.length();
       const oldItemsCount = this.cacheConfig.oldItemsCount;
-      const oldCount = oldItemsCount < 1 ?
-        Math.floor(length * oldItemsCount) : Math.floor(oldItemsCount);
+      const oldCount =
+        oldItemsCount < 1
+          ? Math.floor(length * oldItemsCount)
+          : Math.floor(oldItemsCount);
 
       const getkeys: string[] = [];
       const cacheSorted = await this.getSortedItems();
@@ -109,7 +111,10 @@ class Persist {
     }
   }
 
-  public async isExpired(key: string, currentTime: number = new Date().getTime()): Promise<boolean> {
+  public async isExpired(
+    key: string,
+    currentTime: number = new Date().getTime()
+  ): Promise<boolean> {
     try {
       const res = await this.getMeta(key);
 
@@ -123,16 +128,23 @@ class Persist {
     }
   }
 
-  public async get(key: string, currentTime: number = new Date().getTime()): Promise<any> {
+  public async get(
+    key: string,
+    currentTime: number = new Date().getTime()
+  ): Promise<any> {
     try {
       const res = await this.getMeta(key);
 
-      if (!res) { return Promise.resolve(null); }
+      if (!res) {
+        return Promise.resolve(null);
+      }
 
-      if (res.length !== undefined &&
-          res.expire !== undefined &&
-          res.now !== undefined &&
-          res.count !== undefined) {
+      if (
+        res.length !== undefined &&
+        res.expire !== undefined &&
+        res.now !== undefined &&
+        res.count !== undefined
+      ) {
         const isExpired = this.expiredVaule(res.expire, currentTime);
 
         if (isExpired) {
@@ -168,7 +180,11 @@ class Persist {
     }
   }
 
-  public async set<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
+  public async set<T>(
+    key: string,
+    value: T,
+    expire: number | Date = -1
+  ): Promise<T> {
     try {
       const res = await this.getMeta(key);
 
@@ -189,11 +205,17 @@ class Persist {
     }
   }
 
-  public async append<T>(key: string, value: T, expire: number | Date = -1): Promise<T> {
+  public async append<T>(
+    key: string,
+    value: T,
+    expire: number | Date = -1
+  ): Promise<T> {
     try {
       const res = await this.getMeta(key);
 
-      if (!res) { return this.set(key, value, expire); }
+      if (!res) {
+        return this.set(key, value, expire);
+      }
 
       expire = expire ? expire : res.expire;
 
@@ -255,7 +277,9 @@ class Persist {
     return this.metaCacheInstance.length();
   }
 
-  public async each(iterator: (value: any, key: string, num: number) => void): Promise<boolean> {
+  public async each(
+    iterator: (value: any, key: string, num: number) => void
+  ): Promise<boolean> {
     try {
       const cache = await this.keys();
 
@@ -286,7 +310,9 @@ class Persist {
 
       const countGroup: any = {};
       for (const item of cache) {
-        if (!countGroup[item.count]) { countGroup[item.count] = []; }
+        if (!countGroup[item.count]) {
+          countGroup[item.count] = [];
+        }
         countGroup[item.count].push(item);
       }
 
@@ -297,13 +323,17 @@ class Persist {
           sortCountSet.push({
             count: parseInt(i, 10),
             items: countGroup[i].sort(
-              (a: typed.IPersistMetaDataMap, b: typed.IPersistMetaDataMap) => b.now - a.now),
+              (a: typed.IPersistMetaDataMap, b: typed.IPersistMetaDataMap) =>
+                b.now - a.now
+            ),
           });
         }
       }
 
       // sort by count desc
-      sortCountSet = sortCountSet.sort((a: ITempCache, b: ITempCache) => b.count - a.count);
+      sortCountSet = sortCountSet.sort(
+        (a: ITempCache, b: ITempCache) => b.count - a.count
+      );
 
       let finalCache: typed.IPersistMetaDataMap[] = [];
       for (const res of sortCountSet) {
@@ -320,7 +350,11 @@ class Persist {
     return expire && expire > 0 && expire < currentTime;
   }
 
-  private async setMeta(key: string, value: any = '', expire: number | Date = -1): Promise<string> {
+  private async setMeta(
+    key: string,
+    value: any = '',
+    expire: number | Date = -1
+  ): Promise<string> {
     try {
       const res = await this.getMeta(key);
       const now = new Date().getTime();
@@ -356,8 +390,9 @@ class Persist {
         };
       }
 
-      const realValue = this.cacheConfig.isCompress ?
-        LZString.compressToUTF16(JSON.stringify(metaValue)) : JSON.stringify(metaValue);
+      const realValue = this.cacheConfig.isCompress
+        ? LZString.compressToUTF16(JSON.stringify(metaValue))
+        : JSON.stringify(metaValue);
 
       return this.metaCacheInstance.set(key, realValue);
     } catch (err) {
@@ -371,8 +406,9 @@ class Persist {
 
       let value = null;
       if (res !== undefined && res !== null) {
-        value = this.cacheConfig.isCompress ?
-          JSON.parse(LZString.decompressFromUTF16(res)) : JSON.parse(res);
+        value = this.cacheConfig.isCompress
+          ? JSON.parse(LZString.decompressFromUTF16(res))
+          : JSON.parse(res);
       }
 
       return Promise.resolve(value);

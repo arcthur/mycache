@@ -4,7 +4,8 @@ npm-debug.*
 
 # build
 lib
-dist
+es
+umd
 
 # editor
 .vscode
