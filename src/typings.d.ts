@@ -5,7 +5,7 @@
 
 export as namespace mycache;
 
-export interface IPersistConfig {
+export interface IMycacheConfig {
   driver?: string | string[];
   valueMaxLength?: number;
   oldItemsCount?: number;
@@ -14,7 +14,7 @@ export interface IPersistConfig {
   isCompress?: boolean;
 }
 
-export interface IPersistMetaDataMap {
+export interface IMycacheMetaDataMap {
   key: string;
   expire?: number;
   length?: number;
@@ -22,24 +22,13 @@ export interface IPersistMetaDataMap {
   count?: number;
 }
 
-export interface IPersistMetaDataMapValue {
+export interface IMycacheDataMapValue {
+  key: string;
   expire?: number;
   length?: number;
   now?: number;
+  value?: any;
   count?: number;
-}
-
-export interface IPersistValueDataMap {
-  key: string;
-  value?: any;
-}
-
-export interface IPersistValueDataMapValue {
-  value?: any;
-}
-
-export interface IMemCacheConfig {
-  name?: string;
 }
 
 export interface Mycache {
@@ -57,8 +46,6 @@ export interface Mycache {
   ): Promise<boolean>;
   isExpired(key: string, currentTime?: number): Promise<boolean>;
   getExpiredKeys(): Promise<string[]>;
-  isOverLength(key: string): Promise<boolean>;
-  getOverLengthKeys(): Promise<string[]>;
   getOldKeys(): Promise<string[]>;
-  getSortedItems(): Promise<IPersistMetaDataMap[]>;
+  getSortedItems(): Promise<IMycacheMetaDataMap[]>;
 }

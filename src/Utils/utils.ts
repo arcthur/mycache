@@ -15,20 +15,28 @@ function isObject(val: any) {
 }
 
 function isObjectObject(o: any) {
-  return isObject(o) === true
-    && Object.prototype.toString.call(o) === '[object Object]';
+  return (
+    isObject(o) === true &&
+    Object.prototype.toString.call(o) === '[object Object]'
+  );
 }
 
 function isPlainObject(o: any) {
-  if (isObjectObject(o) === false) { return false; }
+  if (isObjectObject(o) === false) {
+    return false;
+  }
 
   // If has modified constructor
   const ctor = o.constructor;
-  if (typeof ctor !== 'function') { return false; }
+  if (typeof ctor !== 'function') {
+    return false;
+  }
 
   // If has modified prototype
   const prot = ctor.prototype;
-  if (isObjectObject(prot) === false) { return false; }
+  if (isObjectObject(prot) === false) {
+    return false;
+  }
 
   // If constructor does not have an Object-specific method
   if (prot.hasOwnProperty('isPrototypeOf') === false) {
@@ -40,7 +48,9 @@ function isPlainObject(o: any) {
 }
 
 function extend(target: any, source: any) {
-  if (source === null || typeof source !== 'object') { return target; }
+  if (source === null || typeof source !== 'object') {
+    return target;
+  }
 
   const keys = Object.keys(source);
   let i = keys.length;
@@ -52,15 +62,19 @@ function extend(target: any, source: any) {
 }
 
 function omit(obj: any, props: any) {
-  if (!isObject(obj)) { return {}; }
+  if (!isObject(obj)) {
+    return {};
+  }
 
-  if (typeof props === 'string') { props = [props]; }
+  if (typeof props === 'string') {
+    props = [props];
+  }
 
   const keys = Object.keys(obj);
   const res: any = {};
 
   for (const key of keys) {
-    if (!props || (props.indexOf(key) === -1)) {
+    if (!props || props.indexOf(key) === -1) {
       res[key] = obj[key];
     }
   }
@@ -68,21 +82,4 @@ function omit(obj: any, props: any) {
   return res;
 }
 
-// http://www.alloyteam.com/2013/12/js-calculate-the-number-of-bytes-occupied-by-a-string/
-function utf16ByteLength(str: string): number {
-  let total = 0;
-  let charCode;
-
-  for (let i = 0; i < str.length; i++) {
-    charCode = str.charCodeAt(i);
-    if (charCode <= 0xffff) {
-      total += 2;
-    } else {
-      total += 4;
-    }
-  }
-
-  return total;
-}
-
-export { isDate, isNumber, isArray, isPlainObject, extend, omit, utf16ByteLength };
+export { isDate, isNumber, isArray, isPlainObject, extend, omit };

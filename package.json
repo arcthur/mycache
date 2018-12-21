@@ -1,11 +1,12 @@
 {
   "name": "mycache",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "A Cache library",
   "keywords": [
-    "cache",
     "indexedDB",
     "localStorage",
+    "sessionStorage",
+    "memoryStore",
     "javascript"
   ],
   "homepage": "https://github.com/arcthur/mycache#readme",
@@ -18,12 +19,13 @@
   ],
   "files": [
     "src",
-    "dist",
-    "src/typings.d.ts"
+    "umd",
+    "es",
+    "lib"
   ],
-  "main": "lib/mycache.js",
-  "module": "es/mycache.js",
-  "browser": "dist/mycache.js",
+  "main": "lib/index.js",
+  "module": "es/index.js",
+  "browser": "umd/mycache.js",
   "types": "es/typings.d.ts",
   "repository": {
     "type": "git",
@@ -40,10 +42,6 @@
     "lint": "tslint -c src/**/*",
     "test": "npm run build && nyc ava",
     "report": "nyc report --reporter=html"
-  },
-  "dependencies": {
-    "idb-keyval": "^3.1.0",
-    "localforage": "^1.7.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.1.0",

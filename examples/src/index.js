@@ -1,14 +1,16 @@
-import * as Mycache from 'mycache';
+import Mycache from 'mycache';
 
-const persist = new Mycache.Persist();
+const mycache = new Mycache();
 
 async function test() {
-  await persist.set('a', { a: 1 }, 10);
-  await persist.set('b', { b: 1 }, new Date('January 3, 2013'));
+  await mycache.set('a', { a: 1 }, 1);
+  await mycache.set('b', { b: 1 }, 30);
 
-  // setTimeout(async () => {
-  //   await persist.clearExpires();
-  // }, 2000)
+  console.log(await mycache.get('a'))
+  await mycache.clear();
+  setTimeout(async () => {
+    console.log(await mycache.get('a'))
+  }, 2000)
 }
 
 test();
