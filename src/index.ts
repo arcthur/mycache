@@ -1,9 +1,9 @@
-// import * as localForage from 'localforage';
 import { StorageStore } from './StorageStore';
 import * as typed from './typings';
 import * as utils from './Utils/utils';
 
 const DEFAULT_CONFIG: typed.IMycacheConfig = {
+  stores: ['indexedDB', 'localStorage'],
   oldItemsCount: 0.2,
 };
 
@@ -19,8 +19,7 @@ class Mycache {
   constructor(config: typed.IMycacheConfig = {}) {
     this.cacheConfig = utils.extend(DEFAULT_CONFIG, config);
 
-    const stores = ['indexedDB', 'localStorage'];
-    this.cacheInstance = new StorageStore(stores, {
+    this.cacheInstance = new StorageStore(this.cacheConfig.stores, {
       prefix: this.cacheConfig.name,
     });
   }

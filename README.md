@@ -43,6 +43,7 @@ import Mycache from 'mycache';
 const mycache = new Mycache({
   name: 'mycache', // name prefix of key
   oldItemsCount: 0.2, // this count of old items
+  stores: ['indexedDB', 'localStorage'], // use first store if system support
 });
 ```
 

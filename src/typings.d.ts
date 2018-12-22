@@ -6,18 +6,14 @@
 export as namespace mycache;
 
 export interface IMycacheConfig {
-  driver?: string | string[];
-  valueMaxLength?: number;
+  stores?: string[];
   oldItemsCount?: number;
   name?: string;
-  storeName?: string;
-  isCompress?: boolean;
 }
 
 export interface IMycacheMetaDataMap {
   key: string;
   expire?: number;
-  length?: number;
   now?: number;
   count?: number;
 }
@@ -25,7 +21,6 @@ export interface IMycacheMetaDataMap {
 export interface IMycacheDataMapValue {
   key: string;
   expire?: number;
-  length?: number;
   now?: number;
   value?: any;
   count?: number;
