@@ -82,5 +82,10 @@ function getOldKeys(): Promise<string[]> {}
 function getSortedItems(): Promise<typed.IMycacheMetaDataMap[]> {}
 ```
 
+## Inspire & Thanks
+
+- [localForage](https://github.com/localForage/localForage)
+- [ImmortalDB](https://github.com/gruns/ImmortalDB)
+
 ## License
 [MIT](http://opensource.org/licenses/MIT)
