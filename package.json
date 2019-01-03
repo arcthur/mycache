@@ -33,7 +33,7 @@
   },
   "scripts": {
     "dev": "tsc --watch src",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "build": "npm run build:ts && npm run build:cjs && npm run build:umd",
     "build:ts": "cross-env rimraf es && tsc",
     "build:cjs": "cross-env rimraf lib && cross-env NODE_ENV=commonjs BABEL_ENV=cjs babel ./es -d lib",
