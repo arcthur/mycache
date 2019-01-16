@@ -11,22 +11,27 @@ const DEFAULT_STORES = [
 ];
 
 const DEFAULT_KEY_PREFIX = 'storage|';
+const WINDOW_IS_DEFINED = typeof window !== 'undefined';
 
 function checkStores(stores = DEFAULT_STORES) {
   let store: any = MemoryStore;
 
   for (const item of stores) {
-    if (item === 'indexedDB' && window.indexedDB) {
+    if (item === 'indexedDB' && WINDOW_IS_DEFINED && window.indexedDB) {
       store = IndexedDbStore;
       break;
     }
 
-    if (item === 'localStorage' && window.localStorage) {
+    if (item === 'localStorage' && WINDOW_IS_DEFINED && window.localStorage) {
       store = LocalStorageStore;
       break;
     }
 
-    if (item === 'sessionStorage' && window.sessionStorage) {
+    if (
+      item === 'sessionStorage' &&
+      WINDOW_IS_DEFINED &&
+      window.sessionStorage
+    ) {
       store = SessionStorageStore;
       break;
     }

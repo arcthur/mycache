@@ -19,6 +19,7 @@
                 "esSpecCompliant": true
             }
         ],
+        "arrow-parens": false,
         "object-literal-sort-keys": false,
         "no-bitwise": false
     },
